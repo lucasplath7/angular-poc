@@ -1,11 +1,21 @@
-import { Component } from '@angular/core';
+import { Component, NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterOutlet } from '@angular/router';
+
+import { AppBanner } from './layout/app-banner/app-banner.component';
+import { AppFooter } from './layout/app-footer/app-footer.component';
+import { AppNav } from './layout/app-nav/app-nav.component';
+import { AppMainContent } from './layout/app-main-content/app-main-content.component';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [CommonModule, RouterOutlet],
+  imports: [
+    AppBanner,
+    AppFooter,
+    AppMainContent,
+    AppNav,
+    CommonModule,
+  ],
   templateUrl: './app.component.html',
   styleUrl: './app.component.css'
 })

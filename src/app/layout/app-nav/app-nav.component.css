@@ -1,0 +1,7 @@
+.app-nav li::marker {
+  content: '';
+}
+
+.app-nav ul {
+  padding-inline-start: 10px;
+}

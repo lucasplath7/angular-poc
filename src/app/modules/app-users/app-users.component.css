@@ -1,0 +1,13 @@
+.app-form {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: space-between;
+  height: 50%;
+  width: 50%;
+  max-width: 320px;
+  background-color: #F2EFEF;
+  border: 1px solid #DADADA;
+  border-radius: 2%;
+  padding: 10px 0px 10px 20px;
+}

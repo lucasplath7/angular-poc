@@ -1,0 +1,12 @@
+<app-spinner *ngIf="usersService.fetchingUsersData"></app-spinner>
+<div *ngIf="!usersService.fetchingUsersData" >
+  <app-table [tableData]="usersService.allUsersData"></app-table>
+  <button
+    (click)="handleOpenAddUserDialog($event)"
+    style="float: right; margin: 10px"
+  >
+    Add User
+  </button>
+</div>
+<add-user-dialog *ngIf="addUserDialogOpen" [creatingUser]="creatingUser"></add-user-dialog>
+<div *ngIf="addUserDialogOpen"></div>

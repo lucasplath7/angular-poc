@@ -1,0 +1,19 @@
+<div>
+  <table class="app-table">
+    <thead>
+      <tr>
+        <th *ngFor="let header of headers; let i = index">{{header}}</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let row of tableData; let i = index">
+        <ng-container *ngFor="let record of row; let j = index">
+          <td *ngIf="!record.isElement">{{ record.value }} </td>
+          <td *ngIf="record.isElement">
+            <ng-template *ngComponentOutlet="record.value, inputs: {handlers: record.handlers}" />
+          </td>
+        </ng-container>
+      </tr>
+    </tbody>
+  </table>
+</div>
