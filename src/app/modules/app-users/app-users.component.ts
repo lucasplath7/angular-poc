@@ -1,10 +1,11 @@
 import { Component, Inject, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AppTable } from '../../basics/app-table/app-table.component';
+import { of, from, Subscription } from 'rxjs';
 
 import { UsersService } from '../../services/users-service.service';
 import { AppSpinner } from '../../basics/app-spinner/app-spinner.component';
-import { FormsModule } from '@angular/forms';
+import { FormsModule, FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 
 
 @Component({
@@ -22,20 +23,37 @@ export class TestButton {
 @Component({
   selector: 'user-form',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, ReactiveFormsModule],
   template: `
     <form
-    id='app-form'
-    (ngSubmit)="onSubmitAddUser($event)"
-    class='app-form'
+    id="app-form"
+    [formGroup]="userForm"
+    (ngSubmit)="$event.preventDefault(); handleAddUser($event)"
+    class="app-form"
     >
-      <label for='firstName'>First Name:</label>
-      <input type='text' id='firstName' name='firstName' required/>
-      <label for='lastName'>Last Name:</label>
-      <input type='text' id='lastName' name='lastName' required/>
-      <label for='email'>Email:</label>
-      <input type='text' id='email' name='email' required/>
-      <input type='submit' value='Submit' wrap='hard' />
+      <label>First Name:</label>
+      <input
+        type="text"
+        id="firstName"
+        formControlName="firstName"
+      />
+      <label>Last Name:</label>
+      <input
+        type="text"
+        id="lastName"
+        formControlName="lastName"
+      />
+      <label>Email:</label>
+      <input
+        type="text"
+        id="email"
+        formControlName="email"
+      />
+      <input
+        type="submit"
+        value="Submit"
+        wrap="hard"
+      />
     </form>
   `,
   styleUrl: './app-users.component.css'
@@ -45,18 +63,14 @@ export class UserForm {
 
   }
 
-  onSubmitAddUser(event: any) {
-    const element: any = document.getElementById('app-form');
-    const data: any = new FormData(element);
-    const userData: any = {}
+  userForm = new FormGroup({
+    firstName: new FormControl(''),
+    lastName: new FormControl(''),
+    email: new FormControl(''),
+  })
 
-    for (let i of data) {
-      userData[i[0]] = i[1];
-    }
-
-    console.log('user data: ', userData);
-
-    this.usersService.createUser(userData);
+  handleAddUser(event: any) {
+    this.usersService.createUser(this.userForm.value);
   }
 }
 
@@ -66,7 +80,7 @@ export class UserForm {
   imports: [CommonModule, AppSpinner, UserForm],
   template: `
     
-      <dialog id="create-user-dialog" className="create-user-dialog" open>
+      <dialog id="create-user-dialog" className="create-user-dialog" [attr.open]="addUserDialogOpen ? true : null">
         <app-spinner *ngIf="usersService.creatingUser"></app-spinner>
         <user-form *ngIf="!usersService.creatingUser"></user-form>
       </dialog>
@@ -94,8 +108,7 @@ export class AppUsers {
   constructor(public usersService: UsersService) {
 
   }
-
-  usersData = null;
+  usersTableData = null;
   fetchingUsersData = false;
   addUserDialogOpen = false;
   creatingUser = false;
@@ -103,12 +116,35 @@ export class AppUsers {
   userError = false;
 
   handleOpenAddUserDialog(event: any) {
-    console.log(event)
     this.addUserDialogOpen = true;
-    // this.ref.detectChanges();
   }
 
   ngOnInit() {
-    this.usersService.fetchAllUsers();
+    this.usersService.fetchAllUsersRequest();
+    this.usersService.allUsersData$.subscribe((users: any) => {
+      if (!(users.length > 0)) return;
+      console.log('usres in observer', users)
+      this.usersTableData = users.map((user: any) => {
+            
+            const userRecord: any = Object.entries(user).map((userEntry: any) => {
+              return {
+                columnName: userEntry[0],
+                value: userEntry[1],
+                isElement: false,
+              }
+            });
+    
+            userRecord.push({
+              handlers: {
+                handleDeleteUser: () => {this.usersService.deleteUser(user.id)},
+              },          
+              columnName: '',
+              value: TestButton,
+              isElement: true,
+            });
+    
+            return userRecord;
+          });
+    })
   }
 }

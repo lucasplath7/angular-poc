@@ -1,7 +1,6 @@
 import { Injectable } from "@angular/core";
 import { HttpClient } from "@angular/common/http";
-
-import { TestButton } from "../modules/app-users/app-users.component";
+import { BehaviorSubject, Observable, of, tap } from "rxjs";
 
 const API_BASE_URL = 'http://localhost:3001/api'
 
@@ -12,51 +11,36 @@ export class UsersService {
   creatingUser = false;
   deletingUser = false;
   fetchingUsersData = false;
-  allUsersData: any = null;
+  private allUsersData = new BehaviorSubject<any>([]);
+  allUsersData$ = this.allUsersData.asObservable();
 
   constructor(private http: HttpClient) {
 
   }
 
-  fetchAllUsers() {
-    this.fetchingUsersData = true;
-    this.fetchAllUsersRequest().subscribe((users: any) => {
-      console.log('user service resp: ', users)
-      this.allUsersData = users.map((user: any) => {
-        const userRecord: any = Object.entries(user).map((userEntry: any) => {
-          return {
-            columnName: userEntry[0],
-            value: userEntry[1],
-            isElement: false,
-          }
-        });
-
-        userRecord.push({
-          handlers: {
-            handleDeleteUser: () => {this.deleteUser(user.id)},
-          },          
-          columnName: '',
-          value: TestButton,
-          isElement: true,
-        });
-
-        return userRecord;
-      });
-
-      this.fetchingUsersData = false
-    })
-  }
-
   fetchAllUsersRequest() {
-    return this.http.get(`${API_BASE_URL}/user`)
+    this.fetchingUsersData = true;
+
+    this.http.get(`${API_BASE_URL}/user`).subscribe((users: any) => {
+        this.allUsersData.next(users);
+        this.fetchingUsersData = false;
+      });
   }
 
   createUser(userData: any) {
     this.creatingUser = true;
+    
     this.createUserRequest(userData).subscribe(resp => {
-      console.log('resp in create: ', resp)
+      const newUser = {
+        id: resp.body,
+        ...userData,
+      };
+      
+      this.allUsersData.next(
+        [...this.allUsersData.value, newUser]
+      );
+
       this.creatingUser = false;
-      this.fetchAllUsers();
     },
     err => { console.log('error: ', err)}
     )
@@ -67,14 +51,12 @@ export class UsersService {
   }
 
   deleteUser(userId: any) {
-    this.deletingUser = true;
-    this.deleteUserRequest(userId).subscribe(resp => {
-      this.deletingUser = false;
-      this.fetchAllUsers();
-    })
-  }
+    const url = `${API_BASE_URL}/user/${userId}`;
 
-  deleteUserRequest(userId: any) {
-    return this.http.delete(`${API_BASE_URL}/user/${userId}`, {observe: 'response', responseType: 'text'});
+    this.deletingUser = true;
+    this.http.delete(url, { observe: 'response', responseType: 'text' }).subscribe(resp => {
+      this.allUsersData.next(this.allUsersData.value.filter((user: any) => user.id !== userId));
+      this.deletingUser = false;
+    })
   }
 }
